@@ -1,63 +1,72 @@
-# 🚨 ESP32 Motion Security — Home Assistant Distributed Alarm System (Sensor, Siren & Kill Switch)
+# 🚨 PNWC Car Security — Home Assistant Distributed Alarm
 
 <p align="center">
   <img src="esp32alarm.png" width="800" alt="PNWC Car Alarm Project Collage">
 </p>
 
-A high-performance, distributed vehicle security system...
+A professional-grade, distributed vehicle security system. This project bridges a battery-powered mobile sensor unit with a mains-powered house siren using Home Assistant and ESPHome.
 
 ---
 
 ## 🏗️ System Architecture
 
-1.  **The Sensor (Car Unit):** A LILYGO T-Display S3 equipped with an **LD2410C Human Presence Radar** and an **SW-420 Vibration Sensor**. It uses deep sleep to conserve battery and wakes instantly on vibration to report to Home Assistant.
-2.  **The Brain (Home Assistant):** Processes logic, manages arm/disarm states, integrates with **Frigate NVR** for camera snapshots, and handles mobile notifications.
-3.  **The Alarm (House Unit):** A second LILYGO T-Display S3 that controls a **12V DC Siren** via a 5V Relay. It features a hardwired "Wall Kill" button for emergency silencing and disarming.
+1.  **The Sensor (Car Unit):** A LILYGO T-Display S3 equipped with an **LD2410C Human Presence Radar** and an **SW-420 Vibration Sensor**. Wakes instantly on disturbance.
+2.  **The Brain (Home Assistant):** Manages logic, arm/disarm states, and **Frigate NVR** integration.
+3.  **The Alarm (House Unit):** A second T-Display S3 controlling a **12V DC Siren** via a 5V Relay, featuring a hardwired "Wall Kill" button.
 
 ---
 
 ## 📂 Repository Structure
 
-* `car_security_tdisplay_s3.yaml`: ESPHome config for the mobile sensor unit (Vibration + Radar + Battery Mgmt).
-* `house_siren_tdisplay_s3.yaml`: ESPHome config for the siren controller and status display.
-* `ha_automations.yaml`: The logic connecting the two units, including Frigate alerts and auto-arming.
-* `zigbee_kill_button.yaml`: Optional automation for remote Zigbee-based silencing.
+* `car_security_tdisplay_s3.yaml`: Sensor unit config (Vibration + Radar + Battery).
+* `house_siren_tdisplay_s3.yaml`: Siren controller with status display and wall-button logic.
+* `ha_automations.yaml`: Global logic, notifications, and camera triggers.
+* `zigbee_kill_button.yaml`: Optional Zigbee remote integration.
+
+---
+
+## 🛠️ 3D Enclosure & Mounting Designs
+
+The system requires specific mounting to ensure sensor accuracy and weather resistance. Use the blueprint below for printing and assembly.
+
+<p align="center">
+  <img src="alarm_3d_case_designs.svg" width="800" alt="3D Enclosure Blueprints">
+</p>
+
+### Enclosure Specifications
+
+| Feature | Car Sensor Unit | House Siren Unit |
+| :--- | :--- | :--- |
+| **Material** | PETG (Heat tolerant for interiors) | ASA (UV & Weather stable) |
+| **Infill** | 25% Gyroid | 40% Gyroid |
+| **Mounting** | Under-seat rail / Hook tabs | M6 Concrete Anchors |
+| **Hardware** | M3 Heat-set inserts x 4 | M3 Heat-set / M6 Bolts |
+
+**Key Design Note:** The outdoor siren bracket includes a **15° down-tilt** to maximize audio projection toward the driveway and prevent water ingress into the horn.
 
 ---
 
 ## 🔌 Hardware & Wiring
 
 ### 🏠 House Siren Unit (Unit 2)
-| Component | Pin / Connection |
-| :--- | :--- |
-| **Relay IN** | GPIO12 |
-| **Wall Kill Button** | GPIO13 ➔ GND |
-| **Siren Power** | 12V DC (Switched via Relay COM/NO) |
-| **Status Display** | Built-in ST7789 (SPI) |
+* **Relay IN:** GPIO12
+* **Wall Kill Button:** GPIO13 ➔ GND (Internal Pullup)
+* **Status Display:** Built-in ST7789 (`invert: true` may be required for correct colors)
 
 ### 🚗 Car Sensor Unit (Unit 1)
-| Component | Pin / Connection |
-| :--- | :--- |
-| **SW-420 (Wake)** | GPIO1 |
-| **LD2410C TX/RX** | GPIO3 / GPIO2 |
-| **Battery ADC** | GPIO4 (via 100k/100k Divider) |
+* **SW-420 (Wake):** GPIO1
+* **LD2410C TX/RX:** GPIO3 / GPIO2
+* **Battery ADC:** GPIO4 (via 100k/100k Divider)
 
 ---
 
-## 🤖 Key Features
+## 🤖 Advanced Features
 
-* **Human Presence Radar:** Uses mmWave to distinguish between a cat jumping on the car (vibration only) and a person standing inside/near the vehicle (presence).
-* **Intelligent Power:** Car unit enters deep sleep if no presence is detected, waking only on physical disturbance.
-* **Visual Feedback:** The T-Display screens provide real-time status (RSSI, Uptime, Battery, and Alarm State).
-* **Hardwired Fail-safe:** A physical button wired to the house unit can kill the siren and disarm the system even if Home Assistant or Wi-Fi is lagging.
-
----
-
-## 💡 Final Implementation Tips
-* ADC Calibration: In the car-security YAML, you start with a multiply: 2.0 filter for the battery. Depending on the exact resistance of your resistors, you might need to use a multimeter to check the battery voltage and adjust that multiplier (e.g., 2.02 or 1.98) for perfect accuracy.
-* Display Drivers: The House Unit uses platform: ili9xxx with model: ST7789V. If the colors appear inverted (e.g., Black looks White), add invert: true to your display configuration block.
+* **mmWave Detection:** Radar distinguishes between environmental vibration and actual human presence inside the cabin.
+* **Intelligent Deep Sleep:** Car unit draws minimal current until the SW-420 triggers a wake event.
+* **Manual Overrides:** Three kill levels: Local (display), Wall (hardwired), and Mobile (HA App).
 
 ---
 
 ## ⚠️ Safety Note
-The house siren unit switches **12V DC only**. Do not attempt to switch mains AC (120V/240V) directly with the hobbyist relay modules provided in this project.
+The house unit is designed to switch **12V DC only**. Switching mains AC (120V/240V) with these components is dangerous and not supported by this documentation.
