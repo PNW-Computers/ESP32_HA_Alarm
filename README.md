@@ -16,6 +16,21 @@ A professional-grade, distributed vehicle security system. This project bridges 
 
 ---
 
+## 📂 Repository Structure
+
+* `car_security_tdisplay_s3.yaml`: Sensor unit config (Vibration + Radar + Power Management).
+* `house_siren_wroom32.yaml`: Headless siren controller with "Safe Pin" relay logic and status LED.
+* `ha_automations.yaml`: Main Home Assistant logic, scheduling, and notification engine.
+* `frigate_notify_automate.yaml`: Advanced automation for sending Frigate video clips on trigger.
+* `dashboard.md`: Full UI configuration (Mushroom Cards) for the security console.
+* `system_control_card.yaml`: Raw YAML for the main dashboard status and control card.
+* `frigate_live_view.yaml`: Dashboard configuration for real-time camera integration.
+* `frigate_nvr_integrate.md`: Documentation for connecting Frigate events to the alarm triggers.
+* `zigbee_kill_button.yaml`: Optional automation for remote Zigbee-based silencing.
+* `alarm_3d_case_designs.svg`: Blueprints for PETG (Car) and ASA (Siren) enclosures.
+
+---
+
 ## 🛒 Parts List & Shopping Links
 
 ### 🚗 Unit 1: Car Sensor (Presence & Vibration)
@@ -23,7 +38,7 @@ A professional-grade, distributed vehicle security system. This project bridges 
 * **Presence Sensor:** [LD2410C mmWave Radar](https://a.co/d/06LWMXAf) 
 * **Vibration Sensor:** [SW-420 Motion Sensor](https://a.co/d/02E32HKW)
 * **LiPo Battery:** [3.7V 2000mAh LiPo Battery](https://a.co/d/0hEXVDKv) (JST 1.25mm)
-* **Car Power Interface:** [12V to USB-C Step-Down Converter (Hardwired)](https://a.co/d/03p8YRCy) OR [Low-Profile Cigarette Lighter USB Adapter](https://a.co/d/03B6qD6h)
+* **Car Power Interface:** [12V to USB-C Step-Down Converter](https://a.co/d/03p8YRCy) OR [Low-Profile USB Adapter](https://a.co/d/03B6qD6h)
 * **USB Cable:** [90-Degree Right Angle USB-C Cable](https://a.co/d/06fP6O8w)
 
 ### 🏠 Unit 2: House Siren (Relay Controlled)
@@ -33,16 +48,9 @@ A professional-grade, distributed vehicle security system. This project bridges 
 * **Siren Power:** [12V 2A DC Power Supply Adapter](https://a.co/d/0imZnCsy)
 * **Siren Kill Switch:** [Push Button Switch](https://a.co/d/031p9keo) (For "Wall Kill" extension)
 
-### 🛠️ Tooling & Connectivity
-* **Software:** [Home Assistant](https://www.home-assistant.io/) with **ESPHome** add-on.
-* **Zigbee Gateway:** [SONOFF Zigbee 3.0 USB Dongle](https://a.co/d/08299SBs) OR [Home Assistant Connect ZB-2](https://a.co/d/0iVhmzxv).
-* **Wiring:** [22AWG Hook-up Wire](https://a.co/d/0aoN3zOD).
-
 ---
 
 ## 🔌 Master Wiring Reference
-
-> ⚠️ **Note:** The House Siren pins have been moved to "Safe Pins" (GPIO 13/14) to prevent the WROOM-32 from entering a boot-loop or strapping pin error.
 
 ### 🏠 Unit 2: House Siren (WROOM-32 DevKit)
 | Component | ESP32 Pin | Logic / Notes |
@@ -69,32 +77,23 @@ A professional-grade, distributed vehicle security system. This project bridges 
 
 ### 📡 Intelligent Power Management
 The Car Unit is designed for **Zero-Maintenance Operation**:
-* **Ignition Sync:** When the car starts, USB power is detected (GPIO43), deep sleep is disabled, and the battery begins charging.
-* **Parked Security:** 30 seconds after the car is turned off, the unit enters Deep Sleep. It remains dormant until the SW-420 vibration sensor triggers a hardware wake-up.
+* **Ignition Sync:** Detects USB power (GPIO43), stays awake, and charges.
+* **Parked Security:** Enters Deep Sleep 30s after car off. Wakes on vibration to alert Home Assistant.
 
 ### 🔘 Triple-Layer Kill Switch
-1. **Local:** On-board status LED and software logic.
-2. **Hardwired:** GPIO14 "Wall Kill" button (WROOM-32 unit).
-3. **Mobile:** Actionable notifications via Home Assistant.
+1.  **Local Display:** Dashboard controls in Home Assistant.
+2.  **Hardwired:** GPIO14 physical "Wall Kill" button on the siren unit.
+3.  **Mobile:** Actionable video notifications on your phone.
 
 ---
 
 ## 🧪 Testing & Commissioning
 
-### 1. Sensor Calibration
-* **Radar (LD2410C):** Tune Gate Sensitivity in ESPHome so movement outside the glass is ignored.
-* **Vibration (SW-420):** Adjust the onboard potentiometer clockwise to prevent heavy rain from triggering the alarm.
-
-### 2. Power Logic Verification
-* **USB Detect:** Plug in USB-C; verify logs show `USB Power Connected - Disabling Deep Sleep`.
-* **Sleep Entry:** Unplug USB-C; screen should turn off after 30 seconds.
-* **Wake Trigger:** Shake the device while unplugged; it should boot and connect to WiFi immediately.
-
-### 3. Siren Safety Check
-* **Relay Logic:** Listen for the physical *click* of the relay when toggling the switch in HA.
-* **Auto-Timeout:** Trigger the siren and verify it shuts off automatically after 60 seconds.
+1.  **Radar Calibration:** Tune LD2410 Gate Sensitivity in ESPHome to ignore movement outside car glass.
+2.  **Power Logic:** Unplug USB-C; verify the unit enters Deep Sleep and wakes on movement.
+3.  **Siren Safety:** Verify the 60-second auto-timeout script works to prevent permanent siren noise.
 
 ---
 
 ## ⚠️ Safety Note
-The house unit switches **12V DC only**. Do not attempt to switch mains AC (120V/240V) directly with the relay modules provided in this project. All 12V power should be fused appropriately.
+The house unit switches **12V DC only**. Do not attempt to switch mains AC (120V/240V) directly with these relay modules. Ensure all 12V lines are fused.
