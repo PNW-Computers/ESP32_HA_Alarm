@@ -1,4 +1,4 @@
-**# 🚨 ESP32 Security System — Home Assistant Distributed Alarm System (Sensor, Siren & Kill Switch)
+# 🚨 ESP32 Security System — Home Assistant Distributed Alarm System (Sensor, Siren & Kill Switch)
 
 <p align="center">
   <img src="esp32alarm.png" width="800" alt="PNWC Car Alarm Project Collage">
