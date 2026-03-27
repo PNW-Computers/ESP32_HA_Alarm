@@ -38,7 +38,7 @@ A professional-grade, distributed vehicle security system. This project bridges 
 * **Presence Sensor:** [LD2410C mmWave Radar](https://a.co/d/06LWMXAf) 
 * **Vibration Sensor:** [SW-420 Motion Sensor](https://a.co/d/02E32HKW)
 * **LiPo Battery:** [3.7V 2000mAh LiPo Battery](https://a.co/d/0hEXVDKv) (JST 1.25mm)
-* **Car Power Interface:** [12V to USB-C Step-Down Converter](https://a.co/d/03p8YRCy) OR [Low-Profile USB Adapter](https://a.co/d/03B6qD6h)
+* **Car Power Interface:** [12V to USB-C Step-Down Converter](https://a.co/d/03p8YRCy)
 * **USB Cable:** [90-Degree Right Angle USB-C Cable](https://a.co/d/06fP6O8w)
 
 ### 🏠 Unit 2: House Siren (Relay Controlled)
