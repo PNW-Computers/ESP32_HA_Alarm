@@ -1,77 +1,102 @@
-# DIY Vehicular Vibration Sensor Project
+# 🚨 Home Assistant ESP32-Based Distributed Car Alarm System
 
-## Project Goal
-Create a battery-operated device that detects vehicle movement/vibration and sends an alert over Wi-Fi to Home Assistant.
-
----
-
-## Materials List
-* **LILYGO T-Display-S3 (ESP32-S3)**: Main microcontroller and status display.
-* **3.7V LiPo Battery (2000mAh/3000mAh)**: Portable power source.
-* **2A 5V Charge/Discharge Module**: Battery management and 5V boost converter.
-* **SW-420 Vibration Sensor**: Main alarm trigger sensor.
+A two-part security system: A battery-powered vibration sensor inside the vehicle and a high-decibel, mains-powered siren mounted to the house.
 
 ---
 
-## Conceptual Design / Block Diagram
+## 🏗️ System Architecture
 
-```mermaid
-graph TD
-    subgraph "DIY Car Alarm Device"
-        USB_Input[USB Power Input]
-        ChargerModule[Charge/Discharge Module]
-        LipoBattery[3.7V LiPo Battery]
-        ESP32[LILYGO T-Display-S3]
-        VibSensor[SW-420 Vibration Sensor]
-
-        USB_Input -->|5V| ChargerModule
-        ChargerModule <--> LipoBattery
-        ChargerModule -->|5V Power| ESP32
-        VibSensor -->|Signal| ESP32
-    end
-
-    ESP32 -->|Wi-Fi/MQTT| Router[Home Wi-Fi Router]
-    Router -->|Network| HA[Home Assistant Server]
-```
+1.  **The Trigger (Car Unit):** ESP32-S3 + SW-420 Sensor. Powered by LiPo. Sends "Vibration Detected" to HA via Wi-Fi.
+2.  **The Brain (Home Assistant):** Processes the signal and checks if the system is "Armed."
+3.  **The Alarm (House Unit):** ESP32-S3 + 5V Relay + 12V Siren. Plugged into a wall outlet. Triggered by HA.
 
 ---
 
-## Home Assistant Integration
+## 🧱 Materials List
 
-1.  **Detection**: SW-420 triggers the ESP32.
-2.  **Processing**: ESP32 wakes from deep sleep and sends an MQTT message.
-3.  **HA Setup**: Define the entity as a `binary_sensor`.
+### 🚗 Unit 1: Car Sensor (Mobile)
+* **LILYGO T-Display-S3**: Microcontroller.
+* **SW-420 Vibration Sensor**: Detects movement/impact.
+* **3.7V 2000mAh/3000mAh LiPo**: Portable power.
+* **5V Charge/Discharge Module**: Manages battery and boosts to 5V.
 
-### Home Assistant Automation
+### 🏠 Unit 2: House Siren (Mains Powered)
+* **LILYGO T-Display-S3**: Microcontroller & Status Display.
+* **5V 1-Channel Relay Module**: (HiLetgo or similar with Optocoupler).
+* **12V DC Power Supply**: 2A "Wall Wart" adapter.
+* **12V DC Outdoor Siren**: 110dB+ high-decibel alarm.
+* **USB Power Block**: To power the ESP32.
+
+---
+
+## 🔌 Wiring Diagrams
+
+### House Siren Unit Wiring
+
+
+1.  **ESP32 to Relay:**
+    * **5V/VBUS Pin** ➔ Relay **VCC**
+    * **GND Pin** ➔ Relay **GND**
+    * **GPIO 12** ➔ Relay **IN**
+2.  **Relay to Siren Circuit:**
+    * 12V Adapter **(+)** ➔ Relay **COM** (Center Terminal)
+    * Relay **NO** (Normally Open) ➔ Siren **(+)**
+    * 12V Adapter **(-)** ➔ Siren **(-)** (Direct Connection)
+
+---
+
+## 💻 ESPHome Configuration (House Unit)
 
 ```yaml
-alias: Car Alarm - Vibration Detected
-description: Send an alert if vibration is detected when the alarm is armed.
-mode: single
+# Partial Config for the House Siren Display & Relay
+esphome:
+  name: house_siren
 
-trigger:
-  - platform: state
-    entity_id: binary_sensor.car_alarm_vibration
-    to: 'on'
+display:
+  - platform: st7789v
+    # ... (Display timings for T-Display S3)
+    lambda: |-
+      if (id(siren_relay).state) {
+        it.fill(Color::RED);
+        it.print(160, 85, id(font_large), "!!! ALARM !!!");
+      } else {
+        it.fill(Color::BLACK);
+        it.print(160, 85, id(font_small), "SYSTEM READY");
+      }
 
-condition:
-  - condition: state
-    entity_id: input_boolean.car_alarm_mode_armed
-    state: 'on'
-
-action:
-  - service: notify.mobile_app_your_phone_name
-    data:
-      title: "ALERT!"
-      message: "Potential break-in attempt detected in the car!"
-      data:
-        ttl: 0
-        priority: high
+switch:
+  - platform: gpio
+    pin: 12
+    name: "House Siren Relay"
+    id: siren_relay
 ```
 
 ---
 
-## Technical Considerations
+## 🤖 Home Assistant Automation Logic
 
-* **Deep Sleep**: Essential for battery longevity. Configure the SW-420 to act as an external wake-up interrupt for the ESP32.
-* **Power Management**: Use the Charge/Discharge module to regulate voltage and allow for simple USB recharging.
+```yaml
+alias: "Global Alarm: Car Vibration -> House Siren"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.car_vibration_sensor
+    to: "on"
+condition:
+  - condition: state
+    entity_id: input_boolean.alarm_system_armed
+    state: "on"
+action:
+  - service: switch.turn_on
+    target:
+      entity_id: switch.house_siren_relay
+  - delay: "00:02:00"
+  - service: switch.turn_off
+    target:
+      entity_id: switch.house_siren_relay
+```
+
+---
+
+## ⚠️ Technical Notes
+* **Safety:** Only switch the **12V DC** side with the relay. Do not attempt to switch 120V/240V AC unless you are an experienced electrician.
+* **Reliability:** The House Unit should have a static IP or a strong Wi-Fi connection to ensure it receives the "Turn On" command instantly from Home Assistant.
