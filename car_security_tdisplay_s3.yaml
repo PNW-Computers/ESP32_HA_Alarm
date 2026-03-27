@@ -95,6 +95,7 @@ display:
     dc_pin: GPIO7
     reset_pin: GPIO5
     rotation: 90
+    invert_colors: true   # Required for T-Display S3 ST7789V panel — without this colors render inverted
     update_interval: never
     lambda: |-
       it.fill(Color(0, 0, 0));
